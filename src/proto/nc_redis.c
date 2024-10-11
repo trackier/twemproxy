@@ -249,6 +249,9 @@ redis_argn(struct msg *r)
     case MSG_REQ_REDIS_ZREVRANGEBYSCORE:
     case MSG_REQ_REDIS_ZUNIONSTORE:
     case MSG_REQ_REDIS_ZSCAN:
+
+    case MSG_REQ_REDIS_HELLO:
+    case MSG_REQ_REDIS_CLIENT:
         return true;
 
     default:
@@ -771,6 +774,11 @@ redis_parse_req(struct msg *r)
                     break;
                 }
 
+                if (str5icmp(m, 'h', 'e', 'l', 'l', 'o')) {
+                    r->type = MSG_REQ_REDIS_HELLO;
+                    break;
+                }
+
                 break;
 
             case 6:
@@ -876,6 +884,11 @@ redis_parse_req(struct msg *r)
 
                 if (str6icmp(m, 'z', 's', 'c', 'o', 'r', 'e')) {
                     r->type = MSG_REQ_REDIS_ZSCORE;
+                    break;
+                }
+
+                if (str6icmp(m, 'c', 'l', 'i', 'e', 'n', 't')) {
+                    r->type = MSG_REQ_REDIS_CLIENT;
                     break;
                 }
 
@@ -2851,7 +2864,7 @@ redis_add_auth(struct context *ctx, struct conn *conn, struct server *server, in
     pool = server->owner;
     if (!pool->require_auth) {
         return NC_OK;
-    } 
+    }
 
     msg = msg_get(conn, true, conn->redis);
     if (msg == NULL) {
